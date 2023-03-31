@@ -1,6 +1,6 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:random_number/component/number_row.dart';
 import 'package:random_number/constant/color.dart';
 import 'package:random_number/screen/settings_screen.dart';
 
@@ -12,6 +12,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int maxNumber = 1000;
   List<int> randomNumbers = [123, 456, 789];
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _Header(),
+              _Header(
+                onpressed: onSettingsPop,
+              ),
               _Body(randomNumbers: randomNumbers),
               _Footer(onPressed: onClickNumber)
             ],
@@ -34,11 +37,28 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  onClickNumber() {
+  void onSettingsPop() async {
+    final result = await Navigator.of(context).push<int>(
+      MaterialPageRoute(
+        builder: (BuildContext context) {
+          return SettingsScreen(
+            maxNumber: maxNumber,
+          );
+        },
+      ),
+    );
+    if (result != null) {
+      setState(() {
+        maxNumber = result;
+      });
+    }
+  }
+
+  void onClickNumber() {
     final rand = Random();
     final Set<int> newNumbers = {};
     while (newNumbers.length != 3) {
-      final number = rand.nextInt(1000);
+      final number = rand.nextInt(maxNumber);
       newNumbers.add(number);
     }
 
@@ -84,29 +104,22 @@ class _Body extends StatelessWidget {
           children: randomNumbers
               .asMap()
               .entries
-              .map((e) => Padding(
-                    padding: EdgeInsets.only(
-                      bottom: e.key == 2 ? 0 : 16.0,
-                    ),
-                    child: Row(
-                      children: e.value
-                          .toString()
-                          .split('')
-                          .map((x) => Image.asset(
-                                'asset/img/$x.png',
-                                height: 70.0,
-                                width: 50.0,
-                              ))
-                          .toList(),
-                    ),
-                  ))
+              .map((x) => Padding(
+                  padding: EdgeInsets.only(
+                    bottom: x.key == 2 ? 0 : 16.0,
+                  ),
+                  child: NumberRow(
+                    number: x.value,
+                  )))
               .toList()),
     );
   }
 }
 
 class _Header extends StatelessWidget {
+  final VoidCallback onpressed;
   const _Header({
+    required this.onpressed,
     Key? key,
   }) : super(key: key);
 
@@ -121,15 +134,7 @@ class _Header extends StatelessWidget {
               color: Colors.white, fontSize: 30.0, fontWeight: FontWeight.w700),
         ),
         IconButton(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (BuildContext context) {
-                  return const SettingsScreen();
-                },
-              ),
-            );
-          },
+          onPressed: onpressed,
           icon: const Icon(
             Icons.settings,
             color: RED_COLOR,
